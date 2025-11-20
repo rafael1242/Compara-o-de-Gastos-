@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import matplotlib.pyplot as plt
+import numpy as np
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side, PatternFill, Font, Alignment
 from openpyxl.utils import get_column_letter
@@ -11,77 +12,120 @@ st.set_page_config(page_title="Dashboard Empresarial", layout="centered")
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
 
-# PÁGINA INICIAL
+# --- PÁGINA INICIAL ELEGANTE ---
 if st.session_state['pagina'] == 'inicio':
-    st.title("Painel de Comparação de Gastos Empresariais")
-    st.markdown("---")
-    
-    st.markdown("""
-    ### Bem-vindo! 👋
-    
-    Este sistema ajuda você a **comparar os gastos da sua empresa com a média do setor**.
-    
-    Identifique oportunidades de economia e tome decisões informadas com base em dados visuais e análises detalhadas.
-    """)
-    
-    st.markdown("---")
-    
-    st.markdown("### ✨ O que você pode fazer:")
-    col1, col2 = st.columns(2)
-    
-    with col1:
+    st.title("📊 Painel de Comparação de Gastos Empresariais")
+     # Bloco de créditos do projeto/programadores logo após o título
+    with st.expander(" Sobre o projeto "):
         st.markdown("""
-        🔍 **Comparar Gastos**
-        - Veja seus gastos vs. média do setor
-        - Identifique o que está acima/abaixo
-        - Tome decisões com dados
-        """)
-    
-    with col2:
-        st.markdown("""
-        📊 **Visualizações**
-        - Gráficos de barras e pizza
-        - Tabelas detalhadas
-        - Análise profissional
-        """)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        📄 **Exportar PDF**
-        - Relatórios prontos
-        - Compartilhe com sua equipe
-        - Mantenha registro
-        """)
-    
-    with col2:
-        st.markdown("""
-        📁 **Seus Dados**
-        - Carregue CSV ou Excel
-        - Personalize análises
-        - Compare setores diferentes
-        """)
-    
-    st.markdown("---")
-    
-    st.markdown("### 🚀 Como Começar:")
-    st.markdown("""
-    1. Prepare seus dados em **Excel** (empresa + gastos)
-    2. Clique no botão abaixo para ir ao Dashboard
-    3. Faça upload do arquivo de empresas
-    4. Analise e exporte em PDF
-    """)
-    
-    st.markdown("---")
-    
-    if st.button("📊 Acessar Dashboard", use_container_width=True):
-        st.session_state['pagina'] = 'dashboard'
-        st.rerun()
-    
-    st.markdown("---")
-    st.info("💡 **Dica:** Seus dados são processados localmente e não são armazenados no servidor.")
+**Projeto de Extensão:**  
+Tópicos de Big Data em Python  
+Faculdade Faci Wyden
 
+**Programadores:**
+- Rafael Moraes
+- Bianca Santos
+- Andreina Gomes
+
+Este sistema foi desenvolvido como parte das atividades práticas e extensionistas do curso, com foco em análise comparativa de gastos empresariais via Python.
+""", unsafe_allow_html=True)
+
+    
+    st.markdown("---")
+
+    st.markdown(
+        "<h4 style='text-align:center;margin-bottom:8px;'>Como usar o sistema:</h4>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown("""
+<ol>
+<li><b>Baixe o modelo</b> de planilha Excel (botão logo abaixo).</li>
+<li><b>Preencha</b> somente a linha 2 com os dados da sua empresa (veja instruções abaixo).</li>
+<li><b>Vá para o Dashboard</b> e faça o upload do arquivo preenchido.</li>
+<li><b>Veja os gráficos, análises e exporte o relatório PDF.</b></li>
+</ol>
+""", unsafe_allow_html=True)
+
+    st.markdown("---")
+    with st.expander(" Como preencher a planilha Excel (com exemplo)"):
+        st.markdown("""
+- **Só edite a LINHA 2 (empresa). Não mexa nos títulos.**
+- Use apenas NÚMEROS (sem pontos, vírgulas ou R$).
+- Todos os campos devem ser preenchidos (use 0 se não tiver valor).
+
+**Exemplo:**
+| empresa        | setor   | energia | agua | ...      |
+|----------------|---------|---------|------|----------|
+| Minha Empresa  | Varejo  | 2500    | 800  | ...      |
+""")
+        st.info("Colunas: empresa (nome), setor (categoria), gastos em reais – SEM símbolo/R$!")
+
+    st.markdown("---")
+    st.markdown("###  Baixe o modelo Excel:")
+
+    # --- Botão baixar Excel modelo ---
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Modelo"
+    headers = [
+        "empresa", "setor", "energia", "agua", "custo_por_funcionario", "internet",
+        "aluguel", "telefone", "impostos", "transporte", "marketing", "manutencao",
+        "salarios", "seguranca", "limpeza"
+    ]
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    border_dados = Border(
+        left=Side(style='thin', color='000000'),
+        right=Side(style='thin', color='000000'),
+        top=Side(style='thin', color='000000'),
+        bottom=Side(style='thin', color='000000')
+    )
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=2, column=col_num)
+        cell.value = 0
+        cell.border = border_dados
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.number_format = '#,##0'
+    for col_num in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col_num)].width = 14
+    ws.column_dimensions['A'].width = 18
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    st.download_button(
+        label="⬇️ Baixar Modelo Excel (.xlsx)",
+        data=buffer,
+        file_name="modelo_dados.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True
+    )
+
+    st.markdown("---")
+    st.success("💡 Dica: Não mexa em nada relacionado ao setor, o sistema já traz a referência correta!")
+
+    st.markdown("---")
+    st.markdown(
+        "<div style='text-align:center;'>"
+        "<b style='font-size:18px;'>Quando terminar o preenchimento, vá para o Dashboard:</b><br><br>"
+        "</div>",
+        unsafe_allow_html=True
+    )
+    st.write("")
+    btn_col1, btn_col2, btn_col3 = st.columns([3,5,3])
+    with btn_col2:
+        if st.button("🟢 Acessar Dashboard", use_container_width=True):
+            st.session_state['pagina'] = 'dashboard'
+            st.rerun()
+
+# -------------------- #
 # PÁGINA DASHBOARD
 elif st.session_state['pagina'] == 'dashboard':
     import plotly.graph_objects as go
@@ -102,54 +146,8 @@ elif st.session_state['pagina'] == 'dashboard':
         st.session_state['importado'] = False
 
     if not st.session_state['importado']:
-        st.markdown("### 📥 Download do Modelo Padrão")
-        st.markdown("Baixe o modelo padrão de planilha para preencher seus dados:")
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Modelo"
-        headers = [
-            "empresa", "setor", "energia", "agua", "custo_por_funcionario", "internet",
-            "aluguel", "telefone", "impostos", "transporte", "marketing", "manutencao",
-            "salarios", "seguranca", "limpeza"
-        ]
-        header_fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
-        header_font = Font(bold=True)
-        border_dados = Border(
-            left=Side(style='thin', color='2477EA'),
-            right=Side(style='thin', color='2477EA'),
-            top=Side(style='thin', color='2477EA'),
-            bottom=Side(style='thin', color='2477EA')
-        )
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=1, column=col_num)
-            cell.value = header
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=2, column=col_num)
-            cell.value = 0
-            cell.border = border_dados
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-            cell.number_format = '#,##0'
-        for col_num in range(1, len(headers) + 1):
-            ws.column_dimensions[get_column_letter(col_num)].width = 12
-        ws.column_dimensions['A'].width = 20
-
-        buffer = io.BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        st.download_button(
-            label="📊 Baixar Modelo Excel (.xlsx)",
-            data=buffer,
-            file_name="modelo_dados.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True
-        )
-        st.info("Preencha a primeira coluna com o nome da sua empresa.")
-        st.markdown("---")
         st.header("1. Faça upload do banco de empresas")
+        st.markdown("Envie o arquivo Excel preenchido pela sua empresa:")
         arquivo_emp = st.file_uploader("Banco de empresas (.csv ou .xlsx)", type=["csv", "xlsx"], key='emp')
 
         try:
@@ -167,7 +165,7 @@ elif st.session_state['pagina'] == 'dashboard':
             df_empresas.columns = [col.lower() for col in df_empresas.columns]
             st.session_state['df_empresas'] = df_empresas
             st.session_state['df_setor'] = df_setor
-            st.success("Importação realizada! Clique abaixo para avançar para os relatórios.")
+            st.success("✅ Importação realizada! Clique para avançar.")
             if st.button("Avançar para relatórios"):
                 st.session_state['importado'] = True
                 st.rerun()
@@ -178,21 +176,27 @@ elif st.session_state['pagina'] == 'dashboard':
     df_empresas = st.session_state['df_empresas']
     df_setor = st.session_state['df_setor']
 
-    st.subheader("Configuração da Análise")
+    st.subheader("2. Configuração da Análise")
     col1, col2 = st.columns(2)
     with col1:
-        nome_responsavel = st.text_area("Responsável pela análise", height=80)
+        nome_responsavel = st.text_area("Responsável pela análise", height=60)
     with col2:
-        observacao = st.text_area("Observações gerais (opcional)", height=80)
+        observacao = st.text_area("Observações (opcional)", height=60)
     st.markdown("---")
 
-    empresa_nome = st.selectbox("Empresa analisada:", df_empresas.iloc[:,0].unique())
-    setor_nome = st.selectbox("Setor de referência:", df_setor.iloc[:,0].unique())
-    tipo_grafico = st.selectbox("Escolha o tipo de gráfico:", ["Barras Vertical", "Barras Horizontal", "Pizza"])
+    st.subheader("3. Selecione os Dados")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        empresa_nome = st.selectbox("Empresa:", df_empresas.iloc[:,0].unique())
+    with col2:
+        setor_nome = st.selectbox("Setor de referência:", df_setor.iloc[:,0].unique())
+    with col3:
+        tipo_grafico = st.selectbox("Tipo de gráfico:", ["Barras Vertical", "Barras Horizontal", "Pizza"])
 
     empresa = df_empresas[df_empresas.iloc[:,0] == empresa_nome].iloc[0]
     setor_row = df_setor[df_setor.iloc[:,0] == setor_nome].iloc[0]
     colunas_numericas = [c for c in df_setor.columns if c != df_setor.columns[0]]
+    
     def formatar_nome_indicador(nome):
         if nome == 'custo_por_funcionario':
             return 'Salarios'
@@ -224,9 +228,7 @@ elif st.session_state['pagina'] == 'dashboard':
             barmode='group',
             title=None,
             xaxis=dict(title='Indicador', tickangle=-30, automargin=True, showgrid=False),
-            yaxis=dict(
-                title='Valor (R$)', showgrid=True, range=[0, 15000], nticks=7
-            ),
+            yaxis=dict(title='Valor (R$)', showgrid=True, nticks=7),
             legend=dict(title='Referências', orientation='h', yanchor='bottom', y=1.08, xanchor='center', x=0.5),
             height=650,
             margin=dict(l=42, r=32, t=50, b=60)
@@ -255,9 +257,7 @@ elif st.session_state['pagina'] == 'dashboard':
         fig.update_layout(
             barmode='group',
             title=None,
-            xaxis=dict(
-                title='Valor (R$)', showgrid=True, range=[0, 15000], nticks=7
-            ),
+            xaxis=dict(title='Valor (R$)', showgrid=True, nticks=7),
             yaxis=dict(title='Indicador', automargin=True, showgrid=False),
             legend=dict(title='Referências', orientation='h', yanchor='bottom', y=1.08, xanchor='center', x=0.5),
             height=650,
@@ -277,7 +277,7 @@ elif st.session_state['pagina'] == 'dashboard':
         fig.update_traces(textinfo='label+percent')
         fig.update_layout(title=None)
 
-    st.subheader("Visualização Gráfica")
+    st.subheader("4. Visualização Gráfica")
     st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
 
@@ -294,7 +294,7 @@ elif st.session_state['pagina'] == 'dashboard':
             situacao = "Na média"
         tabela.append([formatar_nome_indicador(c), val, media, situacao])
 
-    st.subheader("Comparação Detalhada")
+    st.subheader("5. Comparação Detalhada")
     st.dataframe(pd.DataFrame(tabela, columns=["Gasto", "Empresa", "Média Setor", "Situação"]), use_container_width=True)
     st.markdown("---")
 
@@ -318,7 +318,7 @@ elif st.session_state['pagina'] == 'dashboard':
     if not (principais_acima or principais_abaixo):
         analise_detalhada += "Os gastos estão próximos da média em todos os principais indicadores."
 
-    st.subheader("Resumo Executivo")
+    st.subheader("6. Resumo Executivo")
     st.info(resumo_executivo)
     st.markdown("### Análise Detalhada")
     st.success(analise_detalhada if analise_detalhada else "Nenhum destaque para cima ou para baixo.")
@@ -326,35 +326,39 @@ elif st.session_state['pagina'] == 'dashboard':
         st.markdown("### Observações")
         st.warning(observacao)
 
-    # FUNÇÃO PARA SALVAR GRÁFICO COM MATPLOTLIB (SEM ERRO!)
     def salvar_grafico_png_matplotlib(indicadores, valores_empresa, valores_setor, empresa_nome, setor_nome, tipo_grafico):
-        fig_mpl, ax = plt.subplots(figsize=(12, 4.5), dpi=100)
-        indices = range(len(indicadores))
-        width = 0.35
+        fig_mpl, ax = plt.subplots(figsize=(12, 5), dpi=100)
+        indices = np.arange(len(indicadores))
+        width = 0.36
 
         if tipo_grafico == "Barras Vertical":
-            ax.bar([i - width/2 for i in indices], valores_setor, width, label=f'Média {setor_nome}', color="#2477EA")
-            ax.bar([i + width/2 for i in indices], valores_empresa, width, label=empresa_nome, color="#8ECEED")
+            ax.bar(indices - width/2, valores_setor, width, label=f'Média {setor_nome}', color="#2477EA", alpha=0.9)
+            ax.bar(indices + width/2, valores_empresa, width, label=empresa_nome, color="#8ECEED", alpha=0.9)
             ax.set_xticks(indices)
-            ax.set_xticklabels(indicadores, rotation=30, ha="right", fontsize=9)
-            ax.set_ylabel('Valor (R$)', fontsize=10)
-            ax.set_title('Gráfico Comparativo de Gastos', fontsize=12, fontweight='bold')
+            ax.set_xticklabels(indicadores, rotation=30, ha="right", fontsize=10)
+            ax.set_ylabel('Valor (R$)', fontsize=12)
+            ax.set_title('Gráfico Comparativo de Gastos', fontsize=13, fontweight='bold')
+            ax.legend(fontsize=10)
+            ax.grid(axis='y', linestyle='--', alpha=0.6)
+            fig_mpl.tight_layout()
         elif tipo_grafico == "Barras Horizontal":
-            ax.barh([i - width/2 for i in indices], valores_setor, width, label=f'Média {setor_nome}', color="#2477EA")
-            ax.barh([i + width/2 for i in indices], valores_empresa, width, label=empresa_nome, color="#8ECEED")
+            ax.barh(indices - width/2, valores_setor, width, label=f'Média {setor_nome}', color="#2477EA", alpha=0.9)
+            ax.barh(indices + width/2, valores_empresa, width, label=empresa_nome, color="#8ECEED", alpha=0.9)
             ax.set_yticks(indices)
-            ax.set_yticklabels(indicadores, fontsize=9)
-            ax.set_xlabel('Valor (R$)', fontsize=10)
-            ax.set_title('Gráfico Comparativo de Gastos', fontsize=12, fontweight='bold')
+            ax.set_yticklabels(indicadores, fontsize=10)
+            ax.set_xlabel('Valor (R$)', fontsize=12)
+            ax.set_title('Gráfico Comparativo de Gastos', fontsize=13, fontweight='bold')
+            ax.legend(fontsize=10)
+            ax.grid(axis='x', linestyle='--', alpha=0.6)
+            fig_mpl.tight_layout()
         else:
             colors_pizza = ["#2477EA", "#8ECEED", "#A0C4F6", "#B9D5F8", "#46628d", "#83ACE7", "#69b4fa"]
             ax.pie(valores_empresa, labels=indicadores, autopct='%1.1f%%', colors=colors_pizza, startangle=90)
-            ax.set_title(f'Gráfico de Pizza - {empresa_nome}', fontsize=12, fontweight='bold')
+            ax.set_title(f'Gráfico de Pizza - {empresa_nome}', fontsize=13, fontweight='bold')
+            ax.axis('equal')
 
-        ax.legend(fontsize=9)
-        plt.tight_layout()
         tmp_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-        plt.savefig(tmp_png.name, dpi=100, bbox_inches='tight')
+        plt.savefig(tmp_png.name, bbox_inches='tight')
         plt.close(fig_mpl)
         return tmp_png.name
 
@@ -431,10 +435,12 @@ elif st.session_state['pagina'] == 'dashboard':
         tipo_grafico
     )
 
-    st.subheader("Exportar PDF do relatório")
+    st.markdown("---")
+    st.subheader("7. Exportar PDF do relatório")
     st.download_button(
-        label="Baixar Resumo PDF",
+        label="📥 Baixar Relatório em PDF",
         data=pdf_bytes,
         file_name=f"resumo_{empresa_nome}.pdf",
-        mime="application/pdf"
+        mime="application/pdf",
+        use_container_width=True
     )
