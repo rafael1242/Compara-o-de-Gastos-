@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import matplotlib.pyplot as plt
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side, PatternFill, Font, Alignment
 from openpyxl.utils import get_column_letter
@@ -87,7 +88,7 @@ elif st.session_state['pagina'] == 'dashboard':
     import os
     from datetime import datetime
     import tempfile
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
@@ -325,13 +326,45 @@ elif st.session_state['pagina'] == 'dashboard':
         st.markdown("### Observações")
         st.warning(observacao)
 
-    def gerar_pdf_resumido(resumo_executivo, analise_detalhada, tabela, empresa_nome, setor_nome, nome_responsavel, observacao):
+    # FUNÇÃO PARA SALVAR GRÁFICO COM MATPLOTLIB (SEM ERRO!)
+    def salvar_grafico_png_matplotlib(indicadores, valores_empresa, valores_setor, empresa_nome, setor_nome, tipo_grafico):
+        fig_mpl, ax = plt.subplots(figsize=(12, 4.5), dpi=100)
+        indices = range(len(indicadores))
+        width = 0.35
+
+        if tipo_grafico == "Barras Vertical":
+            ax.bar([i - width/2 for i in indices], valores_setor, width, label=f'Média {setor_nome}', color="#2477EA")
+            ax.bar([i + width/2 for i in indices], valores_empresa, width, label=empresa_nome, color="#8ECEED")
+            ax.set_xticks(indices)
+            ax.set_xticklabels(indicadores, rotation=30, ha="right", fontsize=9)
+            ax.set_ylabel('Valor (R$)', fontsize=10)
+            ax.set_title('Gráfico Comparativo de Gastos', fontsize=12, fontweight='bold')
+        elif tipo_grafico == "Barras Horizontal":
+            ax.barh([i - width/2 for i in indices], valores_setor, width, label=f'Média {setor_nome}', color="#2477EA")
+            ax.barh([i + width/2 for i in indices], valores_empresa, width, label=empresa_nome, color="#8ECEED")
+            ax.set_yticks(indices)
+            ax.set_yticklabels(indicadores, fontsize=9)
+            ax.set_xlabel('Valor (R$)', fontsize=10)
+            ax.set_title('Gráfico Comparativo de Gastos', fontsize=12, fontweight='bold')
+        else:
+            colors_pizza = ["#2477EA", "#8ECEED", "#A0C4F6", "#B9D5F8", "#46628d", "#83ACE7", "#69b4fa"]
+            ax.pie(valores_empresa, labels=indicadores, autopct='%1.1f%%', colors=colors_pizza, startangle=90)
+            ax.set_title(f'Gráfico de Pizza - {empresa_nome}', fontsize=12, fontweight='bold')
+
+        ax.legend(fontsize=9)
+        plt.tight_layout()
+        tmp_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        plt.savefig(tmp_png.name, dpi=100, bbox_inches='tight')
+        plt.close(fig_mpl)
+        return tmp_png.name
+
+    def gerar_pdf_resumido(resumo_executivo, analise_detalhada, tabela, empresa_nome, setor_nome, nome_responsavel, observacao, indicadores, valores_empresa, valores_setor, tipo_grafico):
+        imgpath = salvar_grafico_png_matplotlib(indicadores, valores_empresa, valores_setor, empresa_nome, setor_nome, tipo_grafico)
         tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
         doc = SimpleDocTemplate(tmpfile.name, pagesize=A4)
         styles = getSampleStyleSheet()
         story = []
 
-        # CABEÇALHO
         story.append(Paragraph("Resumo Comparativo", styles['Heading1']))
         story.append(Spacer(1, 10))
         datahora = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -346,9 +379,11 @@ elif st.session_state['pagina'] == 'dashboard':
         
         story.append(Spacer(1, 15))
 
-        # TABELA
-        story.append(Paragraph("Comparação Detalhada", styles['Heading2']))
+        story.append(Paragraph("Gráfico Comparativo", styles['Heading2']))
         story.append(Spacer(1, 8))
+        story.append(RLImage(imgpath, width=450, height=225))
+        story.append(Spacer(1, 12))
+
         head = ['Gasto', 'Empresa', 'Média Setor', 'Situação']
         dados_tab = [head] + [[str(cell) for cell in linha] for linha in tabela]
         table = Table(dados_tab, hAlign='LEFT')
@@ -366,7 +401,6 @@ elif st.session_state['pagina'] == 'dashboard':
         story.append(table)
         story.append(Spacer(1, 18))
 
-        # RESUMO E ANÁLISE
         story.append(Paragraph("Resumo Executivo", styles['Heading2']))
         story.append(Paragraph(resumo_executivo, styles['Normal']))
         story.append(Spacer(1, 12))
@@ -377,6 +411,10 @@ elif st.session_state['pagina'] == 'dashboard':
         with open(tmpfile.name, "rb") as pdf_file:
             pdf_bytes = pdf_file.read()
         tmpfile.close()
+        try:
+            os.remove(imgpath)
+        except Exception:
+            pass
         return pdf_bytes
 
     pdf_bytes = gerar_pdf_resumido(
@@ -386,7 +424,11 @@ elif st.session_state['pagina'] == 'dashboard':
         empresa_nome,
         setor_nome,
         nome_responsavel,
-        observacao
+        observacao,
+        indicadores_grafico,
+        valores_empresa_grafico,
+        valores_setor_grafico,
+        tipo_grafico
     )
 
     st.subheader("Exportar PDF do relatório")
