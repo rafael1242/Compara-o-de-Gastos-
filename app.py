@@ -12,59 +12,51 @@ st.set_page_config(page_title="Dashboard Empresarial", layout="centered")
 if 'pagina' not in st.session_state:
     st.session_state['pagina'] = 'inicio'
 
-# --- PÁGINA INICIAL ELEGANTE ---
+# --- PÁGINA INICIAL ---
 if st.session_state['pagina'] == 'inicio':
     st.title("📊 Painel de Comparação de Gastos Empresariais")
-     # Bloco de créditos do projeto/programadores logo após o título
     with st.expander(" Sobre o projeto "):
         st.markdown("""
-**Projeto de Extensão:**  
-Tópicos de Big Data em Python  
-Faculdade Faci Wyden
+        **Projeto de Extensão:**  
+        Tópicos de Big Data em Python  
+        Faculdade Faci Wyden
 
-**Programadores:**
-- Rafael Moraes
-- Bianca Santos
-- Andreina Gomes
+        **Programadores:**
+        - Rafael Moraes
+        - Bianca Santos
+        - Andreina Gomes
 
-Este sistema foi desenvolvido como parte das atividades práticas e extensionistas do curso, com foco em análise comparativa de gastos empresariais via Python.
-""", unsafe_allow_html=True)
-
-    
+        Este sistema foi desenvolvido como parte das atividades práticas e extensionistas do curso, com foco em análise comparativa de gastos empresariais via Python.
+        """, unsafe_allow_html=True)
     st.markdown("---")
 
     st.markdown(
         "<h4 style='text-align:center;margin-bottom:8px;'>Como usar o sistema:</h4>",
         unsafe_allow_html=True
     )
-
     st.markdown("""
-<ol>
-<li><b>Baixe o modelo</b> de planilha Excel (botão logo abaixo).</li>
-<li><b>Preencha</b> somente a linha 2 com os dados da sua empresa (veja instruções abaixo).</li>
-<li><b>Vá para o Dashboard</b> e faça o upload do arquivo preenchido.</li>
-<li><b>Veja os gráficos, análises e exporte o relatório PDF.</b></li>
-</ol>
-""", unsafe_allow_html=True)
-
+    <ol>
+    <li><b>Baixe o modelo</b> de planilha Excel (botão logo abaixo).</li>
+    <li><b>Preencha</b> somente a linha 2 com os dados da sua empresa (veja instruções abaixo).</li>
+    <li><b>Vá para o Dashboard</b> e faça o upload do arquivo preenchido.</li>
+    <li><b>Veja os gráficos, análises e exporte o relatório PDF.</b></li>
+    </ol>
+    """, unsafe_allow_html=True)
     st.markdown("---")
     with st.expander(" Como preencher a planilha Excel (com exemplo)"):
         st.markdown("""
-- **Só edite a LINHA 2 (empresa). Não mexa nos títulos.**
-- Use apenas NÚMEROS (sem pontos, vírgulas ou R$).
-- Todos os campos devem ser preenchidos (use 0 se não tiver valor).
+        - **Só edite a LINHA 2 (empresa). Não mexa nos títulos.**
+        - Use apenas NÚMEROS (sem pontos, vírgulas ou R$).
+        - Todos os campos devem ser preenchidos (use 0 se não tiver valor).
 
-**Exemplo:**
-| empresa        | setor   | energia | agua | ...      |
-|----------------|---------|---------|------|----------|
-| Minha Empresa  | Varejo  | 2500    | 800  | ...      |
-""")
+        **Exemplo:**
+        | empresa         | setor   | energia | agua | ...      |
+        |----------------|---------|---------|------|----------|
+        | Minha Empresa  | Varejo  | 2500    | 800  | ...      |
+        """)
         st.info("Colunas: empresa (nome), setor (categoria), gastos em reais – SEM símbolo/R$!")
-
     st.markdown("---")
     st.markdown("###  Baixe o modelo Excel:")
-
-    # --- Botão baixar Excel modelo ---
     wb = Workbook()
     ws = wb.active
     ws.title = "Modelo"
@@ -107,10 +99,8 @@ Este sistema foi desenvolvido como parte das atividades práticas e extensionist
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )
-
     st.markdown("---")
     st.success("💡 Dica: Não mexa em nada relacionado ao setor, o sistema já traz a referência correta!")
-
     st.markdown("---")
     st.markdown(
         "<div style='text-align:center;'>"
@@ -125,8 +115,7 @@ Este sistema foi desenvolvido como parte das atividades práticas e extensionist
             st.session_state['pagina'] = 'dashboard'
             st.rerun()
 
-# -------------------- #
-# PÁGINA DASHBOARD
+# --- DASHBOARD ---
 elif st.session_state['pagina'] == 'dashboard':
     import plotly.graph_objects as go
     import os
@@ -196,7 +185,7 @@ elif st.session_state['pagina'] == 'dashboard':
     empresa = df_empresas[df_empresas.iloc[:,0] == empresa_nome].iloc[0]
     setor_row = df_setor[df_setor.iloc[:,0] == setor_nome].iloc[0]
     colunas_numericas = [c for c in df_setor.columns if c != df_setor.columns[0]]
-    
+
     def formatar_nome_indicador(nome):
         if nome == 'custo_por_funcionario':
             return 'Salarios'
@@ -223,24 +212,17 @@ elif st.session_state['pagina'] == 'dashboard':
             marker_color="#8ECEED",
             text=[f'{int(v):,}'.replace(',', '.') for v in valores_empresa_grafico],
             textposition='outside'
-            
-            
         ))
         fig.update_layout(
-    barmode='group',
-    title=None,
-    xaxis=dict(title='Indicador', tickangle=-30, automargin=True, showgrid=False),
-    yaxis=dict(
-        title='Valor (R$)',
-        showgrid=True,
-        nticks=7,
-        type='log'       # linha liagrosaaaaa
-    ),
-    legend=dict(title='Referências', orientation='h', yanchor='bottom', y=1.08, xanchor='center', x=0.5),
-    height=700,
-    width=1200,
-    margin=dict(l=42, r=32, t=50, b=60)
-)
+            barmode='group',
+            title=None,
+            xaxis=dict(title='Indicador', tickangle=-30, automargin=True, showgrid=False),
+            yaxis=dict(title='Valor (R$)', showgrid=True, nticks=7, type='log'),
+            legend=dict(title='Referências', orientation='h', yanchor='bottom', y=1.08, xanchor='center', x=0.5),
+            height=700,
+            width=1200,
+            margin=dict(l=42, r=32, t=50, b=60)
+        )
 
     elif tipo_grafico == "Barras Horizontal":
         fig = go.Figure()
@@ -334,8 +316,10 @@ elif st.session_state['pagina'] == 'dashboard':
         st.markdown("### Observações")
         st.warning(observacao)
 
+    # ----- Função de gráfico com equilíbrio visual -----
     def salvar_grafico_png_matplotlib(indicadores, valores_empresa, valores_setor, empresa_nome, setor_nome, tipo_grafico):
-        fig_mpl, ax = plt.subplots(figsize=(12, 5), dpi=100)
+        fig_mpl, ax = plt.subplots(figsize=(13, 6), dpi=120)
+        fig_mpl.patch.set_facecolor('white')
         indices = np.arange(len(indicadores))
         width = 0.36
 
@@ -343,33 +327,39 @@ elif st.session_state['pagina'] == 'dashboard':
             ax.bar(indices - width/2, valores_setor, width, label=f'Média {setor_nome}', color="#2477EA", alpha=0.9)
             ax.bar(indices + width/2, valores_empresa, width, label=empresa_nome, color="#8ECEED", alpha=0.9)
             ax.set_xticks(indices)
-            ax.set_xticklabels(indicadores, rotation=30, ha="right", fontsize=10)
-            ax.set_ylabel('Valor (R$)', fontsize=12)
-            ax.set_title('Gráfico Comparativo de Gastos', fontsize=13, fontweight='bold')
-            ax.legend(fontsize=10)
-            ax.grid(axis='y', linestyle='--', alpha=0.6)
+            ax.set_xticklabels(indicadores, rotation=25, ha="right", fontsize=11)
+            ax.set_ylabel('Valor (R$)', fontsize=13)
+            ax.set_title('Gráfico Comparativo de Gastos', fontsize=14, fontweight='bold')
+            ax.legend(fontsize=11, loc="upper right")
+            ax.grid(axis='y', linestyle='--', alpha=0.45)
             fig_mpl.tight_layout()
         elif tipo_grafico == "Barras Horizontal":
             ax.barh(indices - width/2, valores_setor, width, label=f'Média {setor_nome}', color="#2477EA", alpha=0.9)
             ax.barh(indices + width/2, valores_empresa, width, label=empresa_nome, color="#8ECEED", alpha=0.9)
             ax.set_yticks(indices)
-            ax.set_yticklabels(indicadores, fontsize=10)
-            ax.set_xlabel('Valor (R$)', fontsize=12)
-            ax.set_title('Gráfico Comparativo de Gastos', fontsize=13, fontweight='bold')
-            ax.legend(fontsize=10)
-            ax.grid(axis='x', linestyle='--', alpha=0.6)
+            ax.set_yticklabels(indicadores, fontsize=11)
+            ax.set_xlabel('Valor (R$)', fontsize=13)
+            ax.set_title('Gráfico Comparativo de Gastos', fontsize=14, fontweight='bold')
+            ax.legend(fontsize=11, loc="upper right")
+            ax.grid(axis='x', linestyle='--', alpha=0.45)
             fig_mpl.tight_layout()
         else:
-            colors_pizza = ["#2477EA", "#8ECEED", "#A0C4F6", "#B9D5F8", "#46628d", "#83ACE7", "#69b4fa"]
-            ax.pie(valores_empresa, labels=indicadores, autopct='%1.1f%%', colors=colors_pizza, startangle=90)
-            ax.set_title(f'Gráfico de Pizza - {empresa_nome}', fontsize=13, fontweight='bold')
+            colors_pizza = [
+                "#2477EA", "#8ECEED", "#A0C4F6",
+                "#B9D5F8", "#46628d", "#83ACE7", "#69b4fa"
+            ]
+            ax.pie(valores_empresa, labels=indicadores, autopct='%1.1f%%', colors=colors_pizza, startangle=90,
+                   textprops={'fontsize': 11})
+            ax.set_title(f'Gráfico de Pizza - {empresa_nome}', fontsize=14, fontweight='bold')
             ax.axis('equal')
+            fig_mpl.tight_layout()
 
         tmp_png = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-        plt.savefig(tmp_png.name, bbox_inches='tight')
+        plt.savefig(tmp_png.name, dpi=120, bbox_inches='tight')
         plt.close(fig_mpl)
         return tmp_png.name
 
+    # ----- Função PDF -----
     def gerar_pdf_resumido(resumo_executivo, analise_detalhada, tabela, empresa_nome, setor_nome, nome_responsavel, observacao, indicadores, valores_empresa, valores_setor, tipo_grafico):
         imgpath = salvar_grafico_png_matplotlib(indicadores, valores_empresa, valores_setor, empresa_nome, setor_nome, tipo_grafico)
         tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
@@ -388,12 +378,11 @@ elif st.session_state['pagina'] == 'dashboard':
         if observacao.strip():
             story.append(Spacer(1, 8))
             story.append(Paragraph(f"Observações: {observacao}", styles['Normal']))
-        
         story.append(Spacer(1, 15))
 
         story.append(Paragraph("Gráfico Comparativo", styles['Heading2']))
         story.append(Spacer(1, 8))
-        story.append(RLImage(imgpath, width=450, height=225))
+        story.append(RLImage(imgpath, width=430, height=230))  # proporcional ao equilíbrio da imagem exemplo 2
         story.append(Spacer(1, 12))
 
         head = ['Gasto', 'Empresa', 'Média Setor', 'Situação']
