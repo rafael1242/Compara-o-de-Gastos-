@@ -1,8 +1,6 @@
 streamlit
 pandas
+openpyxl
 plotly
 reportlab
-openpyxl
-xlsxwriter
-kaleido
-numpy
+matplotlib
