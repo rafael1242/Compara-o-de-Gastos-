@@ -223,16 +223,24 @@ elif st.session_state['pagina'] == 'dashboard':
             marker_color="#8ECEED",
             text=[f'{int(v):,}'.replace(',', '.') for v in valores_empresa_grafico],
             textposition='outside'
+            
+            
         ))
         fig.update_layout(
-            barmode='group',
-            title=None,
-            xaxis=dict(title='Indicador', tickangle=-30, automargin=True, showgrid=False),
-            yaxis=dict(title='Valor (R$)', showgrid=True, nticks=7),
-            legend=dict(title='Referências', orientation='h', yanchor='bottom', y=1.08, xanchor='center', x=0.5),
-            height=650,
-            margin=dict(l=42, r=32, t=50, b=60)
-        )
+    barmode='group',
+    title=None,
+    xaxis=dict(title='Indicador', tickangle=-30, automargin=True, showgrid=False),
+    yaxis=dict(
+        title='Valor (R$)',
+        showgrid=True,
+        nticks=7,
+        type='log'       # linha liagrosaaaaa
+    ),
+    legend=dict(title='Referências', orientation='h', yanchor='bottom', y=1.08, xanchor='center', x=0.5),
+    height=700,
+    width=1200,
+    margin=dict(l=42, r=32, t=50, b=60)
+)
 
     elif tipo_grafico == "Barras Horizontal":
         fig = go.Figure()
