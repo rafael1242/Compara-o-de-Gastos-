@@ -87,7 +87,7 @@ elif st.session_state['pagina'] == 'dashboard':
     import os
     from datetime import datetime
     import tempfile
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
@@ -151,7 +151,6 @@ elif st.session_state['pagina'] == 'dashboard':
         st.header("1. Faça upload do banco de empresas")
         arquivo_emp = st.file_uploader("Banco de empresas (.csv ou .xlsx)", type=["csv", "xlsx"], key='emp')
 
-        # CARREGA O ARQUIVO FIXO DE SETORES
         try:
             df_setor = pd.read_excel('setores.xlsx')
             df_setor.columns = [col.lower() for col in df_setor.columns]
@@ -326,18 +325,13 @@ elif st.session_state['pagina'] == 'dashboard':
         st.markdown("### Observações")
         st.warning(observacao)
 
-    def salvar_grafico_png(fig):
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
-        fig.write_image(tmp.name, width=900, height=450, scale=2)
-        return tmp.name
-
-    def gerar_pdf_resumido(resumo_executivo, analise_detalhada, tabela, empresa_nome, setor_nome, nome_responsavel, observacao, grafico_fig):
-        imgpath = salvar_grafico_png(grafico_fig)
+    def gerar_pdf_resumido(resumo_executivo, analise_detalhada, tabela, empresa_nome, setor_nome, nome_responsavel, observacao):
         tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
         doc = SimpleDocTemplate(tmpfile.name, pagesize=A4)
         styles = getSampleStyleSheet()
         story = []
 
+        # CABEÇALHO
         story.append(Paragraph("Resumo Comparativo", styles['Heading1']))
         story.append(Spacer(1, 10))
         datahora = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -352,11 +346,9 @@ elif st.session_state['pagina'] == 'dashboard':
         
         story.append(Spacer(1, 15))
 
-        story.append(Paragraph("Gráfico Comparativo", styles['Heading2']))
+        # TABELA
+        story.append(Paragraph("Comparação Detalhada", styles['Heading2']))
         story.append(Spacer(1, 8))
-        story.append(RLImage(imgpath, width=450, height=225))
-        story.append(Spacer(1, 12))
-
         head = ['Gasto', 'Empresa', 'Média Setor', 'Situação']
         dados_tab = [head] + [[str(cell) for cell in linha] for linha in tabela]
         table = Table(dados_tab, hAlign='LEFT')
@@ -374,6 +366,7 @@ elif st.session_state['pagina'] == 'dashboard':
         story.append(table)
         story.append(Spacer(1, 18))
 
+        # RESUMO E ANÁLISE
         story.append(Paragraph("Resumo Executivo", styles['Heading2']))
         story.append(Paragraph(resumo_executivo, styles['Normal']))
         story.append(Spacer(1, 12))
@@ -384,10 +377,6 @@ elif st.session_state['pagina'] == 'dashboard':
         with open(tmpfile.name, "rb") as pdf_file:
             pdf_bytes = pdf_file.read()
         tmpfile.close()
-        try:
-            os.remove(imgpath)
-        except Exception:
-            pass
         return pdf_bytes
 
     pdf_bytes = gerar_pdf_resumido(
@@ -397,8 +386,7 @@ elif st.session_state['pagina'] == 'dashboard':
         empresa_nome,
         setor_nome,
         nome_responsavel,
-        observacao,
-        fig
+        observacao
     )
 
     st.subheader("Exportar PDF do relatório")
